@@ -7,6 +7,131 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  passwordHash  String
+  name          String?
+  role          UserRole      @default(USER)
+  emailVerified DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  aiRuns        AiRun[]
+  applications  Application[]
+  profile       Profile?
+  resumes       Resume[]
+}
+
+model Profile {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  location           String?
+  yearsExperience    Int?
+  experienceLevel    String?
+  desiredTitles      String[]
+  skills             String[]
+  remotePreference   String?
+  preferredLocations String[]
+  salaryMin          Int?
+  salaryMax          Int?
+  employmentTypes    String[]
+  linkedinUrl        String?
+  githubUrl          String?
+  portfolioUrl       String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Resume {
+  id           String        @id @default(cuid())
+  userId       String
+  name         String
+  sourceText   String
+  storagePath  String?
+  mimeType     String?
+  isMaster     Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  aiRuns       AiRun[]
+  applications Application[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Job {
+  id              String        @id @default(cuid())
+  externalId      String
+  source          String
+  title           String
+  company         String
+  location        String?
+  workMode        String?
+  category        String?
+  description     String
+  applicationUrl  String
+  salaryMin       Int?
+  salaryMax       Int?
+  salaryCurrency  String?       @default("GBP")
+  employmentType  String?
+  postedAt        DateTime?
+  sourceUpdatedAt DateTime?
+  lastSeenAt      DateTime      @default(now())
+  isActive        Boolean       @default(true)
+  itConfidence    Float?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  aiRuns          AiRun[]
+  applications    Application[]
+
+  @@unique([source, externalId])
+  @@index([title])
+  @@index([isActive, updatedAt])
+}
+
+model AiRun {
+  id         String   @id @default(cuid())
+  userId     String
+  resumeId   String
+  jobId      String
+  provider   String
+  model      String?
+  status     String
+  resultJson Json?
+  createdAt  DateTime @default(now())
+  job        Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  resume     Resume   @relation(fields: [resumeId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model Application {
+  id        String            @id @default(cuid())
+  userId    String
+  jobId     String
+  resumeId  String?
+  status    ApplicationStatus @default(SAVED)
+  appliedAt DateTime?
+  notes     String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  job       Job               @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  resume    Resume?           @relation(fields: [resumeId], references: [id])
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model JobSyncRun {
+  id         String    @id @default(cuid())
+  source     String
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  status     String
+  created    Int       @default(0)
+  updated    Int       @default(0)
+  skipped    Int       @default(0)
+  error      String?
+}
+
 enum UserRole {
   USER
   ADMIN
@@ -20,144 +145,4 @@ enum ApplicationStatus {
   OFFER
   ACCEPTED
   REJECTED
-}
-
-model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  passwordHash  String
-  name          String?
-  role          UserRole @default(USER)
-  emailVerified DateTime?
-
-profile      Profile?
-resumes      Resume[]
-aiRuns       AiRun[]
-applications Application[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Profile {
-  id                  String   @id @default(cuid())
-  userId              String   @unique
-  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  location             String?
-  yearsExperience      Int?
-  experienceLevel      String?
-  desiredTitles        String[]
-  skills               String[]
-  remotePreference     String?
-  preferredLocations   String[]
-  salaryMin            Int?
-  salaryMax            Int?
-  employmentTypes      String[]
-  linkedinUrl          String?
-  githubUrl            String?
-  portfolioUrl         String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
-}
-
-model Resume {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name        String
-  sourceText  String
-  storagePath String?
-  mimeType    String?
-  isMaster    Boolean  @default(false)
-
-aiRuns AiRun[]
-applications Application[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Job {
-  id             String   @id @default(cuid())
-  externalId     String
-  source         String
-  title          String
-  company        String
-  location       String?
-  workMode       String?
-  category       String?
-  description    String
-  applicationUrl String
-
-  salaryMin      Int?
-  salaryMax      Int?
-  salaryCurrency String? @default("GBP")
-  employmentType String?
-
-  postedAt        DateTime?
-  sourceUpdatedAt DateTime?
-  lastSeenAt      DateTime  @default(now())
-  isActive        Boolean   @default(true)
-  itConfidence    Float?
-
-  aiRuns       AiRun[]
-  applications Application[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([source, externalId])
-  @@index([title])
-  @@index([isActive, updatedAt])
-}
-
-model AiRun {
-  id         String @id @default(cuid())
-  userId     String
-  resumeId   String
-  jobId      String
-  provider   String
-  model      String?
-  status     String
-  resultJson Json?
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  resume Resume @relation(fields: [resumeId], references: [id], onDelete: Cascade)
-  job    Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-
-  @@index([userId, createdAt])
-}
-
-model Application {
-  id       String            @id @default(cuid())
-  userId   String
-  jobId    String
-  resumeId String?
-  status   ApplicationStatus @default(SAVED)
-
-  appliedAt DateTime?
-  notes     String?
-
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  job    Job     @relation(fields: [jobId], references: [id], onDelete: Cascade)
-  resume Resume? @relation(fields: [resumeId], references: [id], onDelete: SetNull)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model JobSyncRun {
-  id         String    @id @default(cuid())
-  source     String
-  startedAt  DateTime  @default(now())
-  finishedAt DateTime?
-  status     String
-
-  created Int @default(0)
-  updated Int @default(0)
-  skipped Int @default(0)
-
-  error String?
 }
