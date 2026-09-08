@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server"; import {requireUser} from "@/lib/auth"; import {db} from "@/lib/db";
+export async function GET(){try{const u=await requireUser();const r=await db.resume.findFirst({where:{userId:(u as any).id,isMaster:true},select:{id:true,name:true,createdAt:true,updatedAt:true}});return NextResponse.json({resume:r})}catch{return NextResponse.json({error:"Unauthorized"},{status:401})}}

@@ -1,0 +1,6 @@
+"use client";
+import {useEffect,useState} from "react"; import Link from "next/link";
+export default function Resume(){const[file,setFile]=useState<File|null>(null),[msg,setMsg]=useState(""),[resume,setResume]=useState<any>(null);
+useEffect(()=>{fetch("/api/resume/me").then(r=>r.json()).then(d=>setResume(d.resume||null))},[]);
+async function upload(){if(!file)return;setMsg("Uploading…");const f=new FormData();f.append("file",file);const r=await fetch("/api/resume/upload",{method:"POST",body:f});const d=await r.json();setMsg(d.error||"Resume uploaded.");if(r.ok)setResume(d.resume)}
+return <main className="wrap"><Link className="link" href="/dashboard">← Dashboard</Link><h2 style={{marginTop:18}}>Master resume</h2><p className="muted">Upload PDF or DOCX. Your original stays as the source of truth.</p><div className="card" style={{maxWidth:700}}><div className="field"><label>Resume file</label><input type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onChange={e=>setFile(e.target.files?.[0]||null)}/></div><button className="btn primary" onClick={upload}>Upload resume</button>{msg&&<p className="note">{msg}</p>}{resume&&<p className="note">Current master: <b>{resume.name}</b></p>}</div></main>}

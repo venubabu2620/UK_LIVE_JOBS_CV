@@ -1,0 +1,5 @@
+"use client";
+import { useState } from "react"; import { signIn } from "next-auth/react";
+export default function SignupForm(){const [f,setF]=useState({name:"",email:"",password:""}),[e,setE]=useState("");
+async function go(x:React.FormEvent){x.preventDefault();setE("");const r=await fetch("/api/signup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(f)});const d=await r.json();if(!r.ok){setE(d.error||"Signup failed");return}await signIn("credentials",{email:f.email,password:f.password,callbackUrl:"/dashboard"});}
+return <form onSubmit={go}><div className="field"><label>Name</label><input required value={f.name} onChange={x=>setF({...f,name:x.target.value})}/></div><div className="field"><label>Email</label><input required type="email" value={f.email} onChange={x=>setF({...f,email:x.target.value})}/></div><div className="field"><label>Password</label><input required minLength={8} type="password" value={f.password} onChange={x=>setF({...f,password:x.target.value})}/></div>{e&&<p className="note">{e}</p>}<button className="btn primary full">Create account</button></form>}

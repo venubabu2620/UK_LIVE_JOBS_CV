@@ -1,0 +1,5 @@
+"use client";
+import {signIn} from "next-auth/react"; import {useState} from "react"; import Link from "next/link";
+export default function Login(){const [email,setEmail]=useState(""),[password,setPassword]=useState(""),[error,setError]=useState("");
+async function go(e:React.FormEvent){e.preventDefault();const r=await signIn("credentials",{email,password,redirect:false});if(r?.error)setError("Invalid email or password.");else location.href="/dashboard"}
+return <main className="auth"><div className="authbox"><Link className="brand" href="/">UK Live <i>IT Jobs</i></Link><h1>Welcome back</h1><p className="note">Sign in to your UK IT job workspace.</p><form onSubmit={go}><div className="field"><label>Email</label><input type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></div><div className="field"><label>Password</label><input type="password" required value={password} onChange={e=>setPassword(e.target.value)}/></div>{error&&<p className="note">{error}</p>}<button className="btn primary full">Log in</button></form><p className="note">No account? <Link className="link" href="/signup">Sign up</Link></p></div></main>}

@@ -1,0 +1,2 @@
+import Link from "next/link"; import SignupForm from "@/components/SignupForm";
+export default function Signup(){return <main className="auth"><div className="authbox"><Link className="brand" href="/">UK Live <i>IT Jobs</i></Link><h1>Create your account</h1><p className="note">Start searching UK IT jobs and tailoring your resume.</p><SignupForm/><p className="note">Already registered? <Link className="link" href="/login">Log in</Link></p></div></main>}
